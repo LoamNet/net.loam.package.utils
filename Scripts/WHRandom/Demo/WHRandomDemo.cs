@@ -50,9 +50,9 @@ namespace Loam.Internal.Demo
         // Update is called once per frame
         private void Update()
         {
-            // Generate next iteration
             if (entries < iterations)
             {
+                // Generate next iteration
                 double generated = random.Next();
                 int index = (int)(generated / bucketSize);
 
