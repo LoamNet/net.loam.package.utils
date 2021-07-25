@@ -49,8 +49,9 @@ namespace Loam
         {
             // We want the provided seed wrapped to ultamately from 1 and 29,997 inclusive,
             // that way all three internal seeds are from 1 to 30,000 (inclusive).
-            Seed = seed % (29997); // Make sure we have a value from 0 to 29,996 inclusive
-            Seed += 1;             // Make sure we have a value from 1 to 29,997 inclusive. 
+            seed = System.Math.Abs(seed); // Ensure we're starting with a positive.
+            Seed = seed % (29997);        // Make sure we have a value from 0 to 29,996 inclusive
+            Seed += 1;                    // Make sure we have a value from 1 to 29,997 inclusive. 
 
             ResetSequence();
         }
