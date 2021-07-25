@@ -23,19 +23,19 @@ namespace Loam
         /// This value will always be in the range of 1 to 29,997, inclusive, and is calculated by
         /// taking the provided seed, applying mod of 29,997, then adding 1.
         /// </summary>
-        public int Seed { get; private set; }
+        public System.Int32 Seed { get; private set; }
 
         // Internal variables
-        private int seed1;
-        private int seed2;
-        private int seed3;
+        private System.Int32 seed1;
+        private System.Int32 seed2;
+        private System.Int32 seed3;
 
 
 
         /// <summary>
         /// Constructs WHRandom based on the system time in Milliseconds.
         /// </summary>
-        public WHRandom() : this((int)System.DateTimeOffset.Now.ToUnixTimeMilliseconds()) { }
+        public WHRandom() : this((System.Int32)System.DateTimeOffset.Now.ToUnixTimeMilliseconds()) { }
 
         /// <summary>
         /// Constructs WHRandom using the specified seed. If the seed value is outside of the
@@ -45,7 +45,7 @@ namespace Loam
         /// The internal seed can be checked with the Seed property.
         /// </summary>
         /// <param name="seed">The number used to generate the pseudo-random series</param>
-        public WHRandom(int seed)
+        public WHRandom(System.Int32 seed)
         {
             // We want the provided seed wrapped to ultamately from 1 and 29,997 inclusive,
             // that way all three internal seeds are from 1 to 30,000 (inclusive).
@@ -77,7 +77,7 @@ namespace Loam
             seed3 = (170 * seed3) % 30323;
 
             // Aggregate seeds
-            double sum = (seed1 / 30269.0d) + (seed2 / 30307.0d) + (seed3 / 30323.0d);
+            System.Double sum = (seed1 / 30269.0d) + (seed2 / 30307.0d) + (seed3 / 30323.0d);
 
             // Remove all but the decimal for aggregate double, and return that.
             return sum - System.Math.Truncate(sum);
