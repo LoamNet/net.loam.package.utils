@@ -1,10 +1,10 @@
 {
   "name": "net.loam.utils",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "displayName": "Loam Utilities",
   "description": "A collection of utility classes and functions provided by loam.net",
-  "unity": "2019.1",
-  "unityRelease": "0b5",
+  "unity": "2020.3",
+  "unityRelease": "15f2",
   "documentationUrl": "https://loam.net/packages/utils/",
   "changelogUrl": "https://example.net/packages/utils/changelog.html",
   "licensesUrl": "https://example.net/packages/utils/licensing.html",
