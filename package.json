@@ -22,5 +22,6 @@
     "name": "Loam",
     "email": "contact@loam.net",
     "url": "https://www.loam.net"
-  }
+  },
+  "type": "tool"
 }
