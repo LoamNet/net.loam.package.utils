@@ -1,6 +1,8 @@
+# net.loam.utils License
+---
 BSD 3-Clause License
 
-Copyright (c) 2021, Matthew Cech and Loam LLC
+Copyright (c) 2021-2022, Matthew Cech and Loam LLC
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
