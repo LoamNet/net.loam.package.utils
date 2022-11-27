@@ -14,7 +14,7 @@ namespace Loam.Editor
         /// then the first one selected is considered active. If something in-scene is
         /// selected, it will show up as active but won't have a valid path.
         /// </summary>
-        [MenuItem("Assets/Loam/Copy .meta GUID to clipboard")]
+        [MenuItem("Assets/Copy .meta GUID to clipboard", priority = 20)]
         public static void MetaGUIDToClipboard()
         {
             Object active = Selection.activeObject;
