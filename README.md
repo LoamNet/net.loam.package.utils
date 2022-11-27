@@ -1,6 +1,13 @@
 # net.loam.utils
 A series of small Unity utilities, extensions, and more to assist with development.
 
+## Setup
+1. Create a new unity project with the version specified in package.json (2020.3 lts)
+2. Clone this repo into the packages folder
+3. Load unity
+
+## Contents
+
 ### Menu Items
 - **'Copy Meta GUID to Clipboard'** - When selecting an asset in the project view, the meta GUID can be copied to the clopboard via a right-click menu. This helps with things like manual reference checking.
 
@@ -12,5 +19,5 @@ A series of small Unity utilities, extensions, and more to assist with developme
 - **GameObject** - Extra hierarchy management
 - **CharacterController** - Warping (setting the transform) that correctly accounts for transform sync.
 
-### Functions
+### Static Functions
 - **EditorClearConsole(...)** - Function that will clear the developer console if in-editor.
