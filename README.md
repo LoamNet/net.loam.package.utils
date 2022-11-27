@@ -1,10 +1,15 @@
 # net.loam.utils
 A series of small Unity utilities, extensions, and more to assist with development.
 
-## Setup
+## Setup (to use)
+1. Inside unity, head to `Window > Package Manager`
+2. Select the `+` dropdown button in the upper left of the window and select `Add package from git URL`
+3. Enter the git URL for this repo
+
+## Setup (to edit)
 1. Create a new unity project with the version specified in package.json (2020.3 lts)
-2. Clone this repo into the packages folder
-3. Load unity
+2. Clone this repo into the packages folder at the manifest.json level. The entire contents of this repo should be within a new folder. 
+3. Open/Reload the unity project. Under the Projects tab and packages subfolder, you should see 'Loam Utilities'. 
 
 ## Contents
 
