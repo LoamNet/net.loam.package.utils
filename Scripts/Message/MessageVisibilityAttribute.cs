@@ -13,7 +13,8 @@ namespace Loam
         // https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/attributes/creating-custom-attributes
 
         /// <summary>
-        /// The user-facing name that shows in places the message dispatcher UI
+        /// Optional user-facing friendly name. If not null or empty, this is the name that will display
+        /// in the Message Viewer instead of the raw class name.
         /// </summary>
         public string FriendlyName;
 
@@ -23,11 +24,12 @@ namespace Loam
         public string Description;
 
         /// <summary>
-        /// Controls whether or not this is visible in inspector event windows.
+        /// Controls whether or not this is visible in inspector event windows. By default, all messages are visible.
+        /// This does not impact your ability to listen for or send this message in code.
         /// </summary>
         public bool IsVisible;
 
-        public MessageMetadataAttribute(string friendlyName, string description, bool isVisible)
+        public MessageMetadataAttribute(string description, bool isVisible = true, string friendlyName = null)
         {
             this.FriendlyName = friendlyName;
             this.Description = description;

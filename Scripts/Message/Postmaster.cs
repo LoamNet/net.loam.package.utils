@@ -4,7 +4,8 @@ using UnityEngine;
 namespace Loam
 {
     /// <summary>
-    /// The message registration and dispatch manager
+    /// The manager class in charge of sending messages, coordinating
+    /// registering and unregistering to recieve messages of certain types.
     /// </summary>
     public class Postmaster
     {
@@ -14,13 +15,13 @@ namespace Loam
         /// </summary>
         public class SubscriptionBundle
         {
-            public System.Numerics.BigInteger DispatchCount;     // Number of times someone has dispatched a message of this type
-            public System.Numerics.BigInteger ListenerCallCount; // Number of callbacks executed total (mininum 1 per dispatch)
+            public System.Numerics.BigInteger SendCount;         // Number of times someone has sent a message of this type
+            public System.Numerics.BigInteger ListenerCallCount; // Number of callbacks executed total (mininum 1 per message send)
             public List<MessageSubscription> Subscriptions;
 
             public SubscriptionBundle()
             {
-                DispatchCount = System.Numerics.BigInteger.Zero;
+                SendCount = System.Numerics.BigInteger.Zero;
                 ListenerCallCount = System.Numerics.BigInteger.Zero;
                 Subscriptions = new List<MessageSubscription>();
             }
@@ -77,7 +78,7 @@ namespace Loam
 
         /// <summary>
         /// Applies the specified config file. Reasonable defaults are used otherwise.
-        /// It's suggested this should be applied before usage begins, but that's not
+        /// It's suggested this should be applied before usage begins, but that's not 
         /// strictly required.
         /// </summary>
         /// <param name="config">The new configuration for the postmaster to use</param>
@@ -87,26 +88,26 @@ namespace Loam
         }
 
         /// <summary>
-        /// Given a type that derives from message and a callback, bind to all messages dispatched
+        /// Given a type that derives from message and a callback, bind to all messages sent
         /// with the specified type.
         /// </summary>
         /// <typeparam name="T">The specific derived message type</typeparam>
-        /// <param name="callback">the callback to get if dispatched</param>
+        /// <param name="callback">the callback to get if a message of type T is sent</param>
         /// <returns>A handle to manage the registered callback</returns>
-        public MessageSubscription Register<T>(MessageCallback callback) where T : Message
+        public MessageSubscription Subscribe<T>(MessageCallback callback) where T : Message
         {
             System.Type type = typeof(T);
-            return Register(type, callback);
+            return Subscribe(type, callback);
         }
 
         /// <summary>
-        /// Given a type that derives from message and a callback, bind to all messages dispatched
+        /// Given a type that derives from message and a callback, bind to all messages sent
         /// with the specified type.
         /// </summary>
         /// <param name="type">The specific derived message type</typeparam>
-        /// <param name="callback">the callback to get if dispatched</param>
+        /// <param name="callback">the callback to get if a message of specified type is sent</param>
         /// <returns>A handle to manage the registered callback</returns>
-        public MessageSubscription Register(System.Type type, MessageCallback callback)
+        public MessageSubscription Subscribe(System.Type type, MessageCallback callback)
         {
             MessageSubscription handle = new MessageSubscription(callback, type, this);
 
@@ -128,50 +129,50 @@ namespace Loam
         /// </summary>
         /// <param name="handle"></param>
         /// <returns></returns>
-        public void Unregister(MessageSubscription handle)
+        public void Unsubscribe(MessageSubscription handle)
         {
             toClean.Add(handle);
         }
 
         /// <summary>
-        /// Dispatches a message of specified type. Prefer to use this.
-        /// Events are dispatched to handles in the order the handles were registered.
+        /// Sends a message of specified type. Prefer to use this.
+        /// Messages are sent to callbacks in the order the callbacks were registered.
         /// </summary>
         /// <typeparam name="T">The type of our message</typeparam>
-        /// <param name="message">The instance of that message type to dispatch</param>
-        public void Dispatch<T>(T message) where T : Message
+        /// <param name="message">The instance of that message type to send</param>
+        public void Send<T>(T message) where T : Message
         {
-            if (lookup.TryGetValue(typeof(T), out SubscriptionBundle dispatchData))
+            if (lookup.TryGetValue(typeof(T), out SubscriptionBundle targets))
             {
-                dispatchData.DispatchCount += 1;
-                dispatchData.ListenerCallCount += dispatchData.Subscriptions.Count;
+                targets.SendCount += 1;
+                targets.ListenerCallCount += targets.Subscriptions.Count;
 
-                for (int i = 0; i < dispatchData.Subscriptions.Count; ++i)
+                for (int i = 0; i < targets.Subscriptions.Count; ++i)
                 {
-                    MessageSubscription currentSubscription = dispatchData.Subscriptions[i];
+                    MessageSubscription currentSubscription = targets.Subscriptions[i];
                     currentSubscription.Callback.Invoke(message);
                 }
             }
         }
 
         /// <summary>
-        /// Dispatches a message as an object, enforcing the idea that it's still a mesasge type.
-        /// If it's not, we throw an exception - otherwise, we attempt to go through and dispatch
-        /// events in order of registration.
+        /// Sends a message as an object, enforcing the idea that it's still a message type.
+        /// If it's not, we throw an exception - otherwise, we attempt to go through and send
+        /// messages in order of registration.
         /// </summary>
         /// <param name="messageType">The underlying type of our message</param>
-        /// <param name="toDispatch">The object containing our message</param>
-        public void Dispatch(System.Type messageType, object toDispatch)
+        /// <param name="toSend">The object containing our message</param>
+        public void Send(System.Type messageType, object toSend)
         {
-            if (lookup.TryGetValue(messageType, out SubscriptionBundle dispatchData))
+            if (lookup.TryGetValue(messageType, out SubscriptionBundle targets))
             {
-                Message message = toDispatch as Message;
-                dispatchData.DispatchCount += 1;
-                dispatchData.ListenerCallCount += dispatchData.Subscriptions.Count;
+                Message message = toSend as Message;
+                targets.SendCount += 1;
+                targets.ListenerCallCount += targets.Subscriptions.Count;
 
-                for (int i = 0; i < dispatchData.Subscriptions.Count; ++i)
+                for (int i = 0; i < targets.Subscriptions.Count; ++i)
                 {
-                    MessageSubscription currentSubscription = dispatchData.Subscriptions[i];
+                    MessageSubscription currentSubscription = targets.Subscriptions[i];
                     currentSubscription.Callback.Invoke(message);
                 }
             }
@@ -223,9 +224,9 @@ namespace Loam
         /// <param name="handle">The handle to remove from the list</param>
         private void RemoveSubscription(MessageSubscription handle)
         {
-            if (lookup.TryGetValue(handle.MessageType, out SubscriptionBundle dispatchData))
+            if (lookup.TryGetValue(handle.MessageType, out SubscriptionBundle targets))
             {
-                bool wasRemoved = dispatchData.Subscriptions.Remove(handle);
+                bool wasRemoved = targets.Subscriptions.Remove(handle);
                 if (!wasRemoved)
                 {
                     if (config.ShowErrors)

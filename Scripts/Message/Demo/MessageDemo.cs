@@ -4,14 +4,11 @@ using UnityEngine;
 
 namespace Loam.Internal.Demo
 {
-    [MessageMetadata("Demo Message", "This is a demo message called DemoInteraction. It contains some data (a bool)", isVisible: true)]
+    [MessageMetadata(
+        friendlyName: "Demo Message",
+        description: "This is a demo message called DemoInteraction. It contains some data.",
+        isVisible: true)]
     public class DemoInteraction : Message
-    {
-        public bool HasCustomData = false;
-    }
-
-    [MessageMetadata("Demo Message Second", "This is a demo message called DemoInteraction. It contains some data (a bool)", isVisible: true)]
-    public class DemoInteraction2 : Message
     {
         public bool HasCustomData = false;
     }
@@ -42,7 +39,7 @@ namespace Loam.Internal.Demo
         /// </summary>
         private void Start()
         {
-            postmaster.Register<DemoInteraction>(OnDemoInteraction);
+            postmaster.Subscribe<DemoInteraction>(OnDemoInteraction);
         }
 
         private void Update()
@@ -64,7 +61,7 @@ namespace Loam.Internal.Demo
         {
             DemoInteraction demoInteraction = new DemoInteraction();
             demoInteraction.HasCustomData = true;
-            postmaster.Dispatch<DemoInteraction>(demoInteraction);
+            postmaster.Send<DemoInteraction>(demoInteraction);
         }
 
         /// <summary>

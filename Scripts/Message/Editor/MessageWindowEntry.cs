@@ -12,13 +12,13 @@ namespace Loam
     /// </summary>
     public class MessageWindowEntry : IDisposable
     {
-        // Collected
-        private MessageWindow window;
-        private System.Type messageType;
-
-        private string messageName;
-        private string messageDescription;
-        private float activityValueCurrent;
+        // Collected info
+        public MessageWindow Window { get; private set; }
+        public System.Type MessageType { get; private set; }
+        public string MessageName { get; private set; }
+        public string MessageFriendlyName { get; private set; }
+        public string MessageDescription { get; private set; }
+        public float ActivityValueCurrent { get; private set; }
 
         // Generated 
         private MessageSubscription handle;
@@ -26,71 +26,41 @@ namespace Loam
         /// <summary>
         /// Constructs the object, collecting and caching relevant info for drawing it in the UI
         /// </summary>
-        /// <param name="messageType">The underlying </param>
-        /// <param name="messageAttirbute"></param>
+        /// <param name="messageType">The underlying type of the message</param>
+        /// <param name="messageAttirbute">The name of the message</param>
         public MessageWindowEntry(MessageWindow window, System.Type messageType, MessageMetadataAttribute messageAttirbute)
         {
-            this.window = window;
-            this.messageType = messageType;
+            this.Window = window;
+            this.MessageType = messageType;
 
-            this.messageName = messageType.Name;
-            this.messageDescription = messageAttirbute.Description;
-            this.activityValueCurrent = 0;
+            this.MessageName = messageType.Name;
+            this.MessageFriendlyName = string.IsNullOrWhiteSpace(messageAttirbute.FriendlyName) ? MessageName : messageAttirbute.FriendlyName;
+            this.MessageDescription = messageAttirbute.Description;
+            this.ActivityValueCurrent = 0;
 
-            handle = Postmaster.Instance.Register(messageType, OnEventCallback);
+            handle = Postmaster.Instance.Subscribe(messageType, OnEventCallback);
         }
 
+        /// <summary>
+        /// The subscription to in the message viewer so that we can monitor activity.
+        /// If the message isn't subscribed 
+        /// </summary>
+        /// <param name="msg"></param>
         private void OnEventCallback(Message msg)
         {
-            window.RequestRepaint();
-            activityValueCurrent = MessageWindow.ACTIVITY_INDICATOR_FADE_TIME_SECONDS;
+            Window.RequestRepaint();
+            ActivityValueCurrent = MessageWindow.ACTIVITY_INDICATOR_FADE_TIME_SECONDS;
         }
 
         public void Update(float dt)
         {
             // Decrement color as needed with a lower bound of 0.
-            if (activityValueCurrent > 0)
+            if (ActivityValueCurrent > 0)
             {
-                activityValueCurrent -= dt;
-                activityValueCurrent = Mathf.Max(activityValueCurrent, 0);
-                window.RequestRepaint();
+                ActivityValueCurrent -= dt;
+                ActivityValueCurrent = Mathf.Max(ActivityValueCurrent, 0);
+                Window.RequestRepaint();
             }
-        }
-
-        public void Render()
-        {
-            Postmaster postmaster = Postmaster.Instance;
-            GUILayout.BeginHorizontal();
-
-            // Activity light/box
-            GUILayout.Box(" ", GUILayout.Height(15), GUILayout.Width(15));
-            Rect lastRect = GUILayoutUtility.GetLastRect();
-            Color color = MessageWindow.ACTIVITY_INDICATOR_COLOR;
-            color.a = activityValueCurrent;
-            EditorGUI.DrawRect(lastRect, color);
-
-            // Button to manually activate
-            if (GUILayout.Button("Dispatch"))
-            {
-                // Constructs our message type with a default constructor.
-                // This then dispatches the message of that type. 
-                // https://learn.microsoft.com/en-us/dotnet/api/system.activator.createinstance
-                object obj = Activator.CreateInstance(messageType);
-                postmaster.Dispatch(messageType, obj);
-            }
-
-            bool foundBundle = postmaster.TryGetInternalSubscriptionBundle(messageType, out Postmaster.SubscriptionBundle bundle);
-            if (foundBundle)
-            {
-                GUILayout.Label($"{bundle.DispatchCount}");
-                GUILayout.Label($"{bundle.ListenerCallCount}");
-                GUILayout.Label($"{bundle.Subscriptions.Count}");
-            }
-
-            GUILayout.Label(messageName);
-            GUILayout.Label(messageDescription);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
         }
 
         public void Dispose()

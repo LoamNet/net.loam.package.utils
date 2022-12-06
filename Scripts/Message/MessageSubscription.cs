@@ -26,7 +26,7 @@ namespace Loam
         /// </summary>
         public void Dispose()
         {
-            this.Postmaster.Unregister(this);
+            this.Postmaster.Unsubscribe(this);
             this.Callback = null;
             this.Postmaster = null;
 

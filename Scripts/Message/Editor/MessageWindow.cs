@@ -6,6 +6,7 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
+using System.Linq;
 
 namespace Loam
 {
@@ -28,6 +29,9 @@ namespace Loam
         private static bool needsReload;
         private Vector2 scrollView;
         private List<MessageWindowEntry> entries = new List<MessageWindowEntry>();
+
+        MultiColumnHeader columnHeader;
+        MultiColumnHeaderState.Column[] columns;
 
         /// <summary>
         /// Callback that runs when the entry for this window is selected in the menu.
@@ -62,8 +66,8 @@ namespace Loam
         public void Initialize()
         {
             Cleanup();
-            
-            if(entries == null)
+
+            if (entries == null)
             {
                 entries = new List<MessageWindowEntry>();
             }
@@ -90,6 +94,8 @@ namespace Loam
                 Assembly assembly = assemblies[i];
                 CollectAttributes(assembly);
             }
+
+            Alphabetize(entries);
         }
 
         /// <summary>
@@ -106,10 +112,24 @@ namespace Loam
                 if (attr != null)
                 {
                     MessageMetadataAttribute typeAttribute = attr as MessageMetadataAttribute;
-                    MessageWindowEntry entry = new MessageWindowEntry(this, curType, typeAttribute);
-                    entries.Add(entry);
+                    if (typeAttribute.IsVisible)
+                    {
+                        MessageWindowEntry entry = new MessageWindowEntry(this, curType, typeAttribute);
+                        entries.Add(entry);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Sorts the specified entry list alphabetically
+        /// </summary>
+        /// <param name="toSort">The list to be sorted</param>
+        private void Alphabetize(List<MessageWindowEntry> toSort)
+        {
+            toSort.Sort((left, right) => {
+                return left.MessageName.CompareTo(right.MessageName);
+            });
         }
 
         /// <summary>
@@ -120,6 +140,10 @@ namespace Loam
             needsRepaint = true;
         }
 
+        /// <summary>
+        /// Processes reload, repaint, and other data and visual updates as applicable.
+        /// When the editor isn't playing, provides upkeep for events.
+        /// </summary>
         private void Update()
         {
             if(needsReload)
@@ -153,17 +177,76 @@ namespace Loam
         /// <summary>
         /// Drawing everything
         /// </summary>
-        void OnGUI() 
+        void OnGUI()
         {
             scrollView = EditorGUILayout.BeginScrollView(scrollView);
-            for(int i = 0; i < entries.Count; ++i)
+
+            // Display last session warning if applicable
+            if (!Application.isPlaying)
+            {
+                EditorGUILayout.HelpBox("Data from last play session. Will be lost during next play when Postmaster is recreated.", MessageType.Warning);
+            }
+
+            for (int i = 0; i < entries.Count; ++i)
             {
                 MessageWindowEntry entry = entries[i];
-                entry.Render();
+
+                GUILayout.BeginHorizontal();
+                WindowGUILine(entry);
+                GUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
             }
+
             EditorGUILayout.EndScrollView();
         }
 
+        /// <summary>
+        /// Given a specific entry, call the required layout calls to place it.
+        /// </summary>
+        /// <param name="entry">The window entry we're going to create a line for</param>
+        private void WindowGUILine(MessageWindowEntry entry)
+        {
+            // Collect data
+            Postmaster postmaster = Postmaster.Instance;
+            System.Type messageType = entry.MessageType;
+            postmaster.TryGetInternalSubscriptionBundle(messageType, out Postmaster.SubscriptionBundle bundle);
+
+            GUI.enabled = Application.isPlaying;
+            // Button to manually activate
+            if (GUILayout.Button(new GUIContent("Send", "[Send new message]\n\nConstructs the message with its default constructor and sends it via the postmaster.")))
+            {
+                // Constructs our message type with a default constructor then sends a message of that type. 
+                // https://learn.microsoft.com/en-us/dotnet/api/system.activator.createinstance
+                object obj = Activator.CreateInstance(messageType);
+                postmaster.Send(messageType, obj);
+            }
+            GUI.enabled = true;
+
+            // Configure settings
+            GUI.skin.box.wordWrap = false; 
+            GUI.skin.box.padding = new RectOffset(2, 2, 0, 0);
+            GUI.skin.box.alignment = TextAnchor.MiddleLeft;
+
+            // Display the name of the message 
+            GUILayout.Box(new GUIContent(entry.MessageFriendlyName, $"[Message Name]\n\nThe user-provided friendly name for the message. If a friendly name wasn't specified, the class name is used instead.\n• Friendly Name: {entry.MessageFriendlyName}\n• Class Name: {entry.MessageName}\n• Description: \"{entry.MessageDescription}\""), GUILayout.Width(120));
+
+            // Display sent message counter and show activity as needed. Include additional notes on how many subscribers we've had.
+            GUILayout.Box(new GUIContent($"{bundle.SendCount}", $"[Sent Message Count]\n\nThe number of times this messages has been sent\n\n• Messages Sent: {bundle.SendCount}\n• Total Calls: {bundle.ListenerCallCount}"), GUILayout.Width(48));
+            Rect lastRect = GUILayoutUtility.GetLastRect();
+            Color color = ACTIVITY_INDICATOR_COLOR;
+            color.a = entry.ActivityValueCurrent;
+            EditorGUI.DrawRect(lastRect, color);
+
+            // Add the subscriber count
+            GUILayout.Box(new GUIContent($"{bundle.Subscriptions.Count}", $"[Subscriber Count]\n\nThe number of people have subscribed to this message.\n\n• Subscribers: {bundle.Subscriptions.Count}"), GUILayout.Width(24));
+
+            // Add the description
+            GUILayout.Label(new GUIContent(entry.MessageDescription, $"[User provided description]\n\n\"{entry.MessageDescription}\""));
+        }
+
+        /// <summary>
+        /// Disposes of and cleans out window variables. You should be able to initialize after calling cleanup.
+        /// </summary>
         void Cleanup()
         {
             if (entries != null)
