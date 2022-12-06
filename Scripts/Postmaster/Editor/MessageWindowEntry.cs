@@ -20,7 +20,7 @@ namespace Loam
         public string MessageDescription { get; private set; }
         public float ActivityValueCurrent { get; private set; }
 
-        // Generated 
+        // Internal
         private MessageSubscription handle;
 
         /// <summary>
@@ -38,7 +38,10 @@ namespace Loam
             this.MessageDescription = messageAttirbute.Description;
             this.ActivityValueCurrent = 0;
 
-            this.handle = Postmaster.Instance.Subscribe(messageType, OnEventCallback);
+            if (Application.isPlaying)
+            { 
+                this.handle = Postmaster.Instance.Subscribe(messageType, OnEventCallback);
+            }
         }
 
         /// <summary>
@@ -65,7 +68,7 @@ namespace Loam
 
         public void Dispose()
         {
-            handle.Dispose();
+            handle?.Dispose();
         }
     }
 }

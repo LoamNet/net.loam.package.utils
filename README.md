@@ -26,3 +26,7 @@ A series of small Unity utilities, extensions, and more to assist with developme
 
 ### Static Functions
 - **EditorClearConsole(...)** - Function that will clear the developer console if in-editor.
+
+### Postmaster
+A messaging system that comes with inspector integration and dispatching/tracking tools. Allows easily testing
+messages by dispatching them at runtime along with usage information. Intended to be used for intermittent gameplay events, not aggressive per-update events.

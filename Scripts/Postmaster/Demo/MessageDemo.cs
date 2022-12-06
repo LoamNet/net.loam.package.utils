@@ -59,9 +59,12 @@ namespace Loam.Internal.Demo
 
         private void OnDestroy()
         {
-            postmaster.Dispose();
+            //postmaster.Dispose();
         }
 
+        /// <summary>
+        /// Demo of sending a message with additional code-specified data.
+        /// </summary>
         private void ButtonClicked()
         {
             DemoInteraction demoInteraction = new DemoInteraction();
@@ -77,7 +80,7 @@ namespace Loam.Internal.Demo
         {
             DemoInteraction demo = msg as DemoInteraction;
 
-            string adjective = demo.HasCustomData ? "custom " : "default";
+            string adjective = demo.HasCustomData ? "customized" : "default";
             Debug.Log($"Callback recieved with {adjective} data");
         }
     }

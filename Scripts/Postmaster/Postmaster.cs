@@ -39,41 +39,21 @@ namespace Loam
         private HashSet<MessageSubscription> toClean = new HashSet<MessageSubscription>();
         private PostmasterConfig config = PostmasterConfig.Default();
 
-
-        private static Postmaster instance;
-        public static Postmaster Instance
-        {
-            get
-            {
-                if (!Application.isPlaying)
-                {
-                    if (instance == null)
-                    {
-                        instance = new Postmaster();
-                    }
-                }
-
-                return instance;
-            }
-
-            private set
-            {
-                instance = value;
-            }
-        }
+        // Singleton
+        public static Postmaster Instance { get; private set; }
 
         /// <summary>
         /// Constructs the manager and restricts to a single instance
         /// </summary>
         public Postmaster()
         {
-            if (instance != null)
+            if (Instance != null)
             {
                 throw new System.Exception("You cannot have multiple Postmaster instances");
             }
             else
             {
-                instance = this;
+                Instance = this;
             }
         }
 
@@ -268,7 +248,7 @@ namespace Loam
             lookup.Clear();
             toClean.Clear();
 
-            instance = null;
+            Instance = null;
         }
     }
 }

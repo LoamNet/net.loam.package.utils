@@ -161,7 +161,7 @@ namespace Loam
 
             if(!Application.isPlaying)
             {
-                Postmaster.Instance.Upkeep();
+                Postmaster.Instance?.Upkeep();
             }
 
             float curTime = Time.realtimeSinceStartup;
@@ -201,7 +201,7 @@ namespace Loam
         }
 
         /// <summary>
-        /// Given a specific entry, call the required layout calls to place it.
+        /// Given a specific entry, call the required layout calls to place it. 
         /// </summary>
         /// <param name="entry">The window entry we're going to create a line for</param>
         private void WindowGUILine(MessageWindowEntry entry)
@@ -209,7 +209,14 @@ namespace Loam
             // Collect data
             Postmaster postmaster = Postmaster.Instance;
             System.Type messageType = entry.MessageType;
-            bool foundBundle = postmaster.TryGetInternalSubscriptionBundle(messageType, out Postmaster.SubscriptionBundle bundle);
+
+            bool foundBundle = false;
+            Postmaster.SubscriptionBundle bundle = null;
+            if (postmaster != null)
+            {
+                foundBundle = postmaster.TryGetInternalSubscriptionBundle(messageType, out bundle);
+            }
+
 
             GUI.enabled = Application.isPlaying;
             // Button to manually activate
@@ -218,9 +225,9 @@ namespace Loam
                 // Constructs our message type with a default constructor then sends a message of that type. 
                 // https://learn.microsoft.com/en-us/dotnet/api/system.activator.createinstance
                 object obj = Activator.CreateInstance(messageType);
-                postmaster.Send(messageType, obj);
+                postmaster?.Send(messageType, obj);
             }
-            GUI.enabled = true;
+            GUI.enabled = true; 
 
             // Configure settings
             GUI.skin.box.wordWrap = false; 
@@ -230,18 +237,19 @@ namespace Loam
             // Display the name of the message 
             GUILayout.Box(new GUIContent(entry.MessageFriendlyName, $"[Message Name]\n\nThe user-provided friendly name for the message. If a friendly name wasn't specified, the class name is used instead.\n• Friendly Name: {entry.MessageFriendlyName}\n• Class Name: {entry.MessageName}\n• Description: \"{entry.MessageDescription}\""), GUILayout.Width(120));
 
-            if (foundBundle)
-            {
-                // Display sent message counter and show activity as needed. Include additional notes on how many subscribers we've had.
-                GUILayout.Box(new GUIContent($"{bundle.SendCount}", $"[Sent Message Count]\n\nThe number of times this messages has been sent\n\n• Messages Sent: {bundle.SendCount}\n• Total Calls: {bundle.ListenerCallCount}"), GUILayout.Width(48));
-                Rect lastRect = GUILayoutUtility.GetLastRect();
-                Color color = ACTIVITY_INDICATOR_COLOR;
-                color.a = entry.ActivityValueCurrent;
-                EditorGUI.DrawRect(lastRect, color);
+            // Display sent message counter and show activity as needed. Include additional notes on how many subscribers we've had.
+            const string undefined = "---";
+            string sentCount = foundBundle ? bundle.SendCount.ToString() : undefined;
+            string listenerCallCount = foundBundle ? bundle.ListenerCallCount.ToString() : undefined;
+            GUILayout.Box(new GUIContent(sentCount, $"[Sent Message Count]\n\nThe number of times this messages has been sent\n\n• Messages Sent: {sentCount}\n• Total Calls: {listenerCallCount}"), GUILayout.Width(48));
+            Rect lastRect = GUILayoutUtility.GetLastRect();
+            Color color = ACTIVITY_INDICATOR_COLOR;
+            color.a = entry.ActivityValueCurrent;
+            EditorGUI.DrawRect(lastRect, color);
 
-                // Add the subscriber count
-                GUILayout.Box(new GUIContent($"{bundle.Subscriptions.Count}", $"[Subscriber Count]\n\nThe number of people have subscribed to this message.\n\n• Subscribers: {bundle.Subscriptions.Count}"), GUILayout.Width(24));
-            }
+            // Add the subscriber count
+            string subscriptionCount = foundBundle ? bundle.Subscriptions.Count.ToString() : undefined;
+            GUILayout.Box(new GUIContent(subscriptionCount, $"[Subscriber Count]\n\nThe number of people have subscribed to this message.\n\n• Subscribers: {subscriptionCount}"), GUILayout.Width(24));
 
             // Add the description
             GUILayout.Label(new GUIContent(entry.MessageDescription, $"[User Description]\n\n\"{entry.MessageDescription}\""));
