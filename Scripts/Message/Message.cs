@@ -9,6 +9,6 @@ namespace Loam
     /// </summary>
     public abstract class Message
     {
-
+        // Defaut constructor
     }
 }

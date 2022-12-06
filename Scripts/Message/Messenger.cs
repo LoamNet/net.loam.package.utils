@@ -6,13 +6,29 @@ namespace Loam
 {
     public class Messenger
     {
+        public static Messenger Instance { get; private set; } // Restrict to one messenger at this time
         public delegate void MessageCallback(Message message);
-
+        
         // Internal
         private Dictionary<System.Type, List<MessageSubscription>> lookup = new Dictionary<System.Type, List<MessageSubscription>>();
         private HashSet<MessageSubscription> toClean = new HashSet<MessageSubscription>();
         private MessengerConfig messengerConfig = MessengerConfig.Default();
 
+
+        /// <summary>
+        /// Configure 
+        /// </summary>
+        public Messenger()
+        {
+            if (Instance != null)
+            {
+                throw new System.Exception("You cannot have multiple Messenger instances");
+            }
+            else
+            {
+                Instance = this;
+            }
+        }
 
         /// <summary>
         /// Allows construction of the messenger along with optional configuration
@@ -35,7 +51,19 @@ namespace Loam
         /// <returns>A handle to manage the registered callback</returns>
         public MessageSubscription Register<T>(MessageCallback callback) where T : Message
         {
-            MessageSubscription handle = new MessageSubscription(callback, typeof(T), this);
+            System.Type type = typeof(T);
+            MessageSubscription handle = new MessageSubscription(callback, type, this);
+
+            if(lookup.TryGetValue(type, out List<MessageSubscription> objs))
+            {
+                objs.Add(handle);
+            }
+            else
+            {
+                List<MessageSubscription> subscriptionList = new List<MessageSubscription>();
+                subscriptionList.Add(handle);
+                lookup[type] = subscriptionList;
+            }
             return handle;
         }
 
@@ -47,6 +75,49 @@ namespace Loam
         public void Unregister(MessageSubscription handle)
         {
             toClean.Add(handle);
+        }
+
+        /// <summary>
+        /// Dispatches a message of specified type. Prefer to use this.
+        /// Events are dispatched to handles in the order the handles were registered.
+        /// </summary>
+        /// <typeparam name="T">The type of our message</typeparam>
+        /// <param name="message">The instance of that message type to dispatch</param>
+        public void Dispatch<T>(T message) where T : Message
+        {
+            if (lookup.TryGetValue(typeof(T), out List<MessageSubscription> subscriptions))
+            {
+                for (int i = 0; i < subscriptions.Count; ++i)
+                {
+                    MessageSubscription currentSubscription = subscriptions[i];
+                    currentSubscription.Callback.Invoke(message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Dispatches a message as an object, enforcing the idea that it's still a mesasge type.
+        /// If it's not, we throw an exception - otherwise, we attempt to go through and dispatch
+        /// events in order of registration.
+        /// </summary>
+        /// <param name="messageType">The underlying type of our message</param>
+        /// <param name="toDispatch">The object containing our message</param>
+        public void Dispatch(System.Type messageType, object toDispatch)
+        {
+            if(!messageType.IsAssignableFrom(toDispatch.GetType()))
+            {
+                throw new System.Exception("Provided type is not a Message or drived type");
+            }
+
+            if (lookup.TryGetValue(messageType, out List<MessageSubscription> subscriptions))
+            {
+                Message message = toDispatch as Message;
+                for (int i = 0; i < subscriptions.Count; ++i)
+                {
+                    MessageSubscription currentSubscription = subscriptions[i];
+                    currentSubscription.Callback.Invoke(message);
+                }
+            }
         }
 
         /// <summary>
