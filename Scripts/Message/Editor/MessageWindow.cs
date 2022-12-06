@@ -5,6 +5,7 @@ using UnityEditor;
 using System;
 using System.Reflection;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
 
 namespace Loam
 {
@@ -15,84 +16,22 @@ namespace Loam
     /// </summary>
     public class MessageWindow : EditorWindow
     {
-        // Static configurables
-        private const string WINDOW_TITLE = "Message Viewer";
-        private const string WINDOW_PATH = "Window/" + WINDOW_TITLE;
+        // Configurables
+        public const string WINDOW_TITLE = "Message Viewer";
+        public const string WINDOW_PATH = "Window/" + WINDOW_TITLE;
+        public const float ACTIVITY_INDICATOR_FADE_TIME_SECONDS = 0.7f;
+        public static readonly Color ACTIVITY_INDICATOR_COLOR = new Color(0f / 255f, 128f / 255f, 255f / 255f, 100f / 100f);
 
         // Internal
+        private float lastTime;
+        private bool needsRepaint;
+        private static bool needsReload;
         private Vector2 scrollView;
-        private List<MessageEntry> entries = new List<MessageEntry>();
-
-        private static Messenger GetOrCreateMessenger()
-        {
-            if(Messenger.Instance == null)
-            {
-                new Messenger();
-            }
-
-            return Messenger.Instance;
-        }
-
-
+        private List<MessageWindowEntry> entries = new List<MessageWindowEntry>();
 
         /// <summary>
-        /// An entry in the events window 
-        /// </summary>
-        public class MessageEntry
-        {
-            private System.Type messageType;
-            private MessageMetadataAttribute messageAttirbute;
-            private string messageName;
-            private string messageDescription;
-            private float activityValueCurrent;
-            private float activityValueReset;
-            private int activationCount;
-
-            public MessageEntry(System.Type messageType, MessageMetadataAttribute messageAttirbute)
-            {
-                this.messageType = messageType;
-                this.messageAttirbute = messageAttirbute;
-
-                this.messageName = messageType.Name;
-                this.messageDescription = messageAttirbute.Description;
-                this.activityValueCurrent = 0;
-                this.activityValueReset = 1f;
-                this.activationCount = 0;
-
-                GetOrCreateMessenger().Register<Internal.Demo.DemoInteraction>(OnDemo);
-            }
-
-            private void OnDemo(Message msg)
-            {
-                activityValueCurrent = activityValueReset;
-                ++activationCount;
-            }
-
-            public void Render()
-            {
-                GUILayout.BeginHorizontal();
-
-                if (GUILayout.Button("Dispatch"))
-                {
-                    // Constructs our message type with a default constructor.
-                    // This then dispatches the message of that type.
-                    // https://learn.microsoft.com/en-us/dotnet/api/system.activator.createinstance
-                    object obj = Activator.CreateInstance(messageType);
-                    GetOrCreateMessenger().Dispatch(messageType, obj);
-                }
-
-                GUILayout.Label(messageName);
-                GUILayout.Label(messageDescription);
-                GUILayout.Label($"{activationCount}");
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
-            }
-        }
-
-        /// <summary>
-        /// Must be static. This is the function that runs when you select the entry for
-        /// this window in the menu. Doesn't matter the name. This is intended to get
-        /// or create the message window (and not have multiple up)
+        /// Callback that runs when the entry for this window is selected in the menu.
+        /// Intended to get or create the message window and prevent duplicates.
         /// </summary>
         [MenuItem(WINDOW_PATH)]
 #pragma warning disable IDE0051 // Suppress "Remove unused private members"
@@ -106,11 +45,31 @@ namespace Loam
         }
 
         /// <summary>
+        /// Callback that runs when the assembly reloads scripts.
+        /// Intended to flag that a reload is required.
+        /// </summary>
+        [UnityEditor.Callbacks.DidReloadScripts]
+#pragma warning disable IDE0051 // Suppress "Remove unused private members"
+        private static void OnScriptsReloaded()
+#pragma warning restore IDE0051 // Restore "Remove unused private members"
+        {
+            needsReload = true;
+        }
+
+        /// <summary>
         /// A non-static initialization function for the window, run before the window is shown.
         /// </summary>
         public void Initialize()
         {
+            Cleanup();
+            
+            if(entries == null)
+            {
+                entries = new List<MessageWindowEntry>();
+            }
+
             CollectAllAttributes();
+            lastTime = Time.realtimeSinceStartup;
         }
 
         /// <summary>
@@ -118,6 +77,13 @@ namespace Loam
         /// </summary>
         private void CollectAllAttributes()
         {
+            for(int i = 0; i < entries.Count; ++i)
+            {
+                MessageWindowEntry entry = entries[i];
+                entry.Dispose();
+            }
+            entries.Clear();
+
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             for (int i = 0; i < assemblies.Length; ++i)
             {
@@ -140,24 +106,76 @@ namespace Loam
                 if (attr != null)
                 {
                     MessageMetadataAttribute typeAttribute = attr as MessageMetadataAttribute;
-                    MessageEntry entry = new MessageEntry(curType, typeAttribute);
+                    MessageWindowEntry entry = new MessageWindowEntry(this, curType, typeAttribute);
                     entries.Add(entry);
                 }
             }
         }
 
         /// <summary>
+        /// Queues up a repaint.
+        /// </summary>
+        public void RequestRepaint()
+        {
+            needsRepaint = true;
+        }
+
+        private void Update()
+        {
+            if(needsReload)
+            {
+                Initialize();
+                needsReload = false;
+                needsRepaint = false;
+            }
+
+            if(needsRepaint)
+            {
+                Repaint();
+                needsRepaint = false;
+            }
+
+            if(!Application.isPlaying)
+            {
+                Postmaster.Instance.Upkeep();
+            }
+
+            float curTime = Time.realtimeSinceStartup;
+            float dt = curTime - lastTime;
+            lastTime = curTime;
+            
+            for(int i = 0; i < entries.Count; ++i)
+            {
+                entries[i].Update(dt);
+            }
+        }
+
+        /// <summary>
         /// Drawing everything
         /// </summary>
-        void OnGUI()
+        void OnGUI() 
         {
             scrollView = EditorGUILayout.BeginScrollView(scrollView);
             for(int i = 0; i < entries.Count; ++i)
             {
-                MessageEntry entry = entries[i];
+                MessageWindowEntry entry = entries[i];
                 entry.Render();
             }
             EditorGUILayout.EndScrollView();
+        }
+
+        void Cleanup()
+        {
+            if (entries != null)
+            {
+                for (int i = 0; i < entries.Count; ++i)
+                {
+                    MessageWindowEntry entry = entries[i];
+                    entry.Dispose();
+                }
+
+                entries.Clear();
+            }
         }
 
         /// <summary>
@@ -165,12 +183,9 @@ namespace Loam
         /// </summary>
         private void OnDestroy()
         {
-            for (int i = 0; i < entries.Count; ++i)
-            {
-                MessageEntry entry = entries[i];
-
-            }
+            Cleanup();
         }
+
     }
 }
 

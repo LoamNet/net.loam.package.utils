@@ -5,18 +5,18 @@ using UnityEngine;
 namespace Loam
 {
     /// <summary>
-    /// Represents a subscription to a specific type of event from the Messenger. 
+    /// Represents a subscription to a specific type of event from the Postmaster. 
     /// </summary>
     public class MessageSubscription : System.IDisposable
     {
         public System.Type MessageType { get; private set; }
-        public Messenger Messenger { get; private set; }
-        public Messenger.MessageCallback Callback { get; private set; }
+        public Postmaster Postmaster { get; private set; }
+        public Postmaster.MessageCallback Callback { get; private set; }
 
-        public MessageSubscription(Messenger.MessageCallback callback, System.Type type, Messenger messenger)
+        public MessageSubscription(Postmaster.MessageCallback callback, System.Type type, Postmaster postmaster)
         {
             this.MessageType = type;
-            this.Messenger = messenger;
+            this.Postmaster = postmaster;
             this.Callback = callback;
         }
 
@@ -26,9 +26,9 @@ namespace Loam
         /// </summary>
         public void Dispose()
         {
-            this.Messenger.Unregister(this);
+            this.Postmaster.Unregister(this);
             this.Callback = null;
-            this.Messenger = null;
+            this.Postmaster = null;
 
             return;
         }

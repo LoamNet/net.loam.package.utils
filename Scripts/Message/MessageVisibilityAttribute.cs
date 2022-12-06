@@ -3,7 +3,7 @@ using System;
 namespace Loam
 {
     /// <summary>
-    /// An attribute for tagging messages to send through the Messenger. 
+    /// An attribute for tagging messages to send through the Postmaster. 
     /// It's intended to contain meta information about a message like user-only notes/details.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
