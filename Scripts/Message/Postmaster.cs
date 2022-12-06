@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ namespace Loam
     /// The manager class in charge of sending messages, coordinating
     /// registering and unregistering to recieve messages of certain types.
     /// </summary>
-    public class Postmaster
+    public class Postmaster : IDisposable
     {
         /// <summary>
         /// A bundle of data pairing extra info with a raw list of message subscriptions.
@@ -246,6 +247,28 @@ namespace Loam
 
                 return;
             }
+        }
+
+        /// <summary>
+        /// Handles the Postmaster cleanup. Will be skipped if 
+        /// it's not configured to shut down.
+        /// </summary>
+        public void Dispose()
+        {
+            foreach(KeyValuePair<Type, SubscriptionBundle> item in lookup)
+            {
+                List<MessageSubscription> subscriptions = item.Value.Subscriptions;
+                for (int i = 0; i < subscriptions.Count; ++i)
+                {
+                    MessageSubscription current = subscriptions[i];
+                    current.Dispose();
+                }
+            }
+
+            lookup.Clear();
+            toClean.Clear();
+
+            instance = null;
         }
     }
 }

@@ -181,12 +181,6 @@ namespace Loam
         {
             scrollView = EditorGUILayout.BeginScrollView(scrollView);
 
-            // Display last session warning if applicable
-            if (!Application.isPlaying)
-            {
-                EditorGUILayout.HelpBox("Data from last play session. Will be lost during next play when Postmaster is recreated.", MessageType.Warning);
-            }
-
             for (int i = 0; i < entries.Count; ++i)
             {
                 MessageWindowEntry entry = entries[i];
@@ -195,6 +189,12 @@ namespace Loam
                 WindowGUILine(entry);
                 GUILayout.EndHorizontal();
                 GUILayout.FlexibleSpace();
+            }
+
+            // Display last session warning if applicable
+            if (!Application.isPlaying)
+            {
+                EditorGUILayout.HelpBox("Seeing data from your last play session? You probably forgot to call Dispose() on Postmaster during shutdown. If you're calling Dispose() but seeing more than one subscription (this window), then you're not unsubscribing some events. You can intentionally avoid calling Dispose during debugging to get a snapshot of your usage.", MessageType.Info);
             }
 
             EditorGUILayout.EndScrollView();
@@ -209,11 +209,11 @@ namespace Loam
             // Collect data
             Postmaster postmaster = Postmaster.Instance;
             System.Type messageType = entry.MessageType;
-            postmaster.TryGetInternalSubscriptionBundle(messageType, out Postmaster.SubscriptionBundle bundle);
+            bool foundBundle = postmaster.TryGetInternalSubscriptionBundle(messageType, out Postmaster.SubscriptionBundle bundle);
 
             GUI.enabled = Application.isPlaying;
             // Button to manually activate
-            if (GUILayout.Button(new GUIContent("Send", "[Send new message]\n\nConstructs the message with its default constructor and sends it via the postmaster.")))
+            if (GUILayout.Button(new GUIContent("Send", "[Create and Send Message]\n\nConstructs the message with its default constructor and sends it via the postmaster.")))
             {
                 // Constructs our message type with a default constructor then sends a message of that type. 
                 // https://learn.microsoft.com/en-us/dotnet/api/system.activator.createinstance
@@ -230,18 +230,21 @@ namespace Loam
             // Display the name of the message 
             GUILayout.Box(new GUIContent(entry.MessageFriendlyName, $"[Message Name]\n\nThe user-provided friendly name for the message. If a friendly name wasn't specified, the class name is used instead.\n• Friendly Name: {entry.MessageFriendlyName}\n• Class Name: {entry.MessageName}\n• Description: \"{entry.MessageDescription}\""), GUILayout.Width(120));
 
-            // Display sent message counter and show activity as needed. Include additional notes on how many subscribers we've had.
-            GUILayout.Box(new GUIContent($"{bundle.SendCount}", $"[Sent Message Count]\n\nThe number of times this messages has been sent\n\n• Messages Sent: {bundle.SendCount}\n• Total Calls: {bundle.ListenerCallCount}"), GUILayout.Width(48));
-            Rect lastRect = GUILayoutUtility.GetLastRect();
-            Color color = ACTIVITY_INDICATOR_COLOR;
-            color.a = entry.ActivityValueCurrent;
-            EditorGUI.DrawRect(lastRect, color);
+            if (foundBundle)
+            {
+                // Display sent message counter and show activity as needed. Include additional notes on how many subscribers we've had.
+                GUILayout.Box(new GUIContent($"{bundle.SendCount}", $"[Sent Message Count]\n\nThe number of times this messages has been sent\n\n• Messages Sent: {bundle.SendCount}\n• Total Calls: {bundle.ListenerCallCount}"), GUILayout.Width(48));
+                Rect lastRect = GUILayoutUtility.GetLastRect();
+                Color color = ACTIVITY_INDICATOR_COLOR;
+                color.a = entry.ActivityValueCurrent;
+                EditorGUI.DrawRect(lastRect, color);
 
-            // Add the subscriber count
-            GUILayout.Box(new GUIContent($"{bundle.Subscriptions.Count}", $"[Subscriber Count]\n\nThe number of people have subscribed to this message.\n\n• Subscribers: {bundle.Subscriptions.Count}"), GUILayout.Width(24));
+                // Add the subscriber count
+                GUILayout.Box(new GUIContent($"{bundle.Subscriptions.Count}", $"[Subscriber Count]\n\nThe number of people have subscribed to this message.\n\n• Subscribers: {bundle.Subscriptions.Count}"), GUILayout.Width(24));
+            }
 
             // Add the description
-            GUILayout.Label(new GUIContent(entry.MessageDescription, $"[User provided description]\n\n\"{entry.MessageDescription}\""));
+            GUILayout.Label(new GUIContent(entry.MessageDescription, $"[User Description]\n\n\"{entry.MessageDescription}\""));
         }
 
         /// <summary>

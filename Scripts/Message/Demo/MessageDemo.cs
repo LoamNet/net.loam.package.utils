@@ -57,6 +57,11 @@ namespace Loam.Internal.Demo
             button.onClick.RemoveListener(ButtonClicked);
         }
 
+        private void OnDestroy()
+        {
+            postmaster.Dispose();
+        }
+
         private void ButtonClicked()
         {
             DemoInteraction demoInteraction = new DemoInteraction();

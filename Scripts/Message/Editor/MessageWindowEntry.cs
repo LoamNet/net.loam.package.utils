@@ -38,14 +38,14 @@ namespace Loam
             this.MessageDescription = messageAttirbute.Description;
             this.ActivityValueCurrent = 0;
 
-            handle = Postmaster.Instance.Subscribe(messageType, OnEventCallback);
+            this.handle = Postmaster.Instance.Subscribe(messageType, OnEventCallback);
         }
 
         /// <summary>
         /// The subscription to in the message viewer so that we can monitor activity.
         /// If the message isn't subscribed 
         /// </summary>
-        /// <param name="msg"></param>
+        /// <param name="msg">The message instance</param>
         private void OnEventCallback(Message msg)
         {
             Window.RequestRepaint();
