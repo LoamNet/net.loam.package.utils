@@ -123,17 +123,7 @@ namespace Loam
         /// <param name="message">The instance of that message type to send</param>
         public void Send<T>(T message) where T : Message
         {
-            if (lookup.TryGetValue(typeof(T), out SubscriptionBundle targets))
-            {
-                targets.SendCount += 1;
-                targets.ListenerCallCount += targets.Subscriptions.Count;
-
-                for (int i = 0; i < targets.Subscriptions.Count; ++i)
-                {
-                    MessageSubscription currentSubscription = targets.Subscriptions[i];
-                    currentSubscription.Callback.Invoke(message);
-                }
-            }
+            Send(typeof(T), message);
         }
 
         /// <summary>
@@ -155,6 +145,13 @@ namespace Loam
                 {
                     MessageSubscription currentSubscription = targets.Subscriptions[i];
                     currentSubscription.Callback.Invoke(message);
+                }
+            }
+            else
+            {
+                if (config.ShowLogging)
+                {
+                    Debug.Log($"No subscribers found for message of type {messageType}. Ignoring.");
                 }
             }
         }
