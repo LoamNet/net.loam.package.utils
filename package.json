@@ -1,6 +1,6 @@
 {
   "name": "net.loam.utils",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "displayName": "Loam Utilities",
   "description": "A collection of utility classes and functions provided by loam.net",
   "unity": "2020.3",

@@ -187,9 +187,11 @@ namespace Loam
 
                 GUILayout.BeginHorizontal();
                 WindowGUILine(entry);
-                GUILayout.EndHorizontal();
                 GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
             }
+
+            GUILayout.FlexibleSpace();
 
             // Display last session warning if applicable
             if (!Application.isPlaying)
