@@ -2,7 +2,7 @@
 ---
 BSD 3-Clause License
 
-Copyright (c) 2021-2022, Loam LLC
+Copyright (c) 2021-2023, Loam LLC
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
