@@ -38,7 +38,7 @@ namespace Loam
             this.MessageDescription = messageAttirbute.Description;
             this.ActivityValueCurrent = 0;
 
-            if (Application.isPlaying)
+            if (Application.isPlaying && Postmaster.Instance != null)
             { 
                 this.handle = Postmaster.Instance.Subscribe(messageType, OnEventCallback);
             }
