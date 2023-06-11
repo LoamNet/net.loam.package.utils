@@ -1,3 +1,14 @@
 {
-	"name": "NewAssembly"
+    "name": "Loam Utilities",
+    "rootNamespace": "Loam",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

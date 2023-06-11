@@ -1,27 +1,27 @@
 {
   "name": "net.loam.utils",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "displayName": "Loam Utilities",
-  "description": "A collection of utility classes and functions provided by loam.net",
+  "description": "A collection of general utility classes, functions, and small systems provided by loam.net",
   "unity": "2020.3",
   "unityRelease": "38f1",
-  "documentationUrl": "https://loam.net/packages/utils/",
-  "changelogUrl": "https://example.net/packages/utils/changelog.html",
-  "licensesUrl": "https://example.net/packages/utils/licensing.html",
+  "documentationUrl": "https://github.com/LoamNet/net.loam.package.utils/blob/main/README.md",
+  "changelogUrl": "https://github.com/LoamNet/net.loam.package.utils/commits/main",
+  "licensesUrl": "https://github.com/LoamNet/net.loam.package.utils/blob/main/LICENSE.md",
   "keywords": [
     "utils",
     "utilities",
     "extension",
     "extensions",
-    "loam",
     "rand",
     "random",
+    "loam",
     "loam.net"
   ],
   "author": {
     "name": "Loam",
     "email": "contact@loam.net",
-    "url": "https://www.loam.net"
+    "url": "https://www.loam.net/"
   },
   "type": "tool"
 }
