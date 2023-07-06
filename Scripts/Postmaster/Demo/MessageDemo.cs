@@ -16,22 +16,18 @@ namespace Loam.Internal.Demo
     public class MessageDemo : MonoBehaviour
     {
         [SerializeField] private UnityEngine.UI.Button button;
-        private Postmaster postmaster;
-        
+
         /// <summary>
         /// Use as an opportunity for initialization
         /// </summary>
         private void Awake()
         {
-            // Create the postmaster at some point. 
-            postmaster = new Postmaster();
-
             // Configure it with a new config for maximum logging
             PostmasterConfig config = new PostmasterConfig();
             config.ShowLogging = true;
             config.ShowWarnings = true;
             config.ShowErrors = true;
-            postmaster.Configure(config);
+            Postmaster.Instance.Configure(config);
         }
 
         /// <summary>
@@ -39,12 +35,12 @@ namespace Loam.Internal.Demo
         /// </summary>
         private void Start()
         {
-            postmaster.Subscribe<DemoInteraction>(OnDemoInteraction);
+            Postmaster.Instance.Subscribe<DemoInteraction>(OnDemoInteraction);
         }
 
         private void Update()
         {
-            postmaster.Upkeep();
+            Postmaster.Instance.Upkeep();
         }
 
         private void OnEnable()
@@ -59,7 +55,7 @@ namespace Loam.Internal.Demo
 
         private void OnDestroy()
         {
-            //postmaster.Dispose();
+            // postmaster.Cleanup();
         }
 
         /// <summary>
@@ -69,7 +65,7 @@ namespace Loam.Internal.Demo
         {
             DemoInteraction demoInteraction = new DemoInteraction();
             demoInteraction.HasCustomData = true;
-            postmaster.Send<DemoInteraction>(demoInteraction);
+            Postmaster.Instance.Send<DemoInteraction>(demoInteraction);
         }
 
         /// <summary>

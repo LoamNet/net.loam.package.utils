@@ -8,7 +8,7 @@ namespace Loam
     /// The manager class in charge of sending messages, coordinating
     /// registering and unregistering to recieve messages of certain types.
     /// </summary>
-    public class Postmaster : IDisposable
+    public class Postmaster
     {
         /// <summary>
         /// A bundle of data pairing extra info with a raw list of message subscriptions.
@@ -35,26 +35,34 @@ namespace Loam
         public delegate void MessageCallback(Message message);
         
         // Internal
-        private Dictionary<System.Type, SubscriptionBundle> lookup = new Dictionary<System.Type, SubscriptionBundle>();
-        private HashSet<MessageSubscription> toClean = new HashSet<MessageSubscription>();
-        private PostmasterConfig config = PostmasterConfig.Default();
+        private Dictionary<System.Type, SubscriptionBundle> lookup;
+        private HashSet<MessageSubscription> toClean;
+        private PostmasterConfig config;
 
         // Singleton
-        public static Postmaster Instance { get; private set; }
+        private static Postmaster instance;
+        public static Postmaster Instance
+        {
+            get
+            {
+                if(instance == null)
+                {
+                    instance = new Postmaster();
+                }
+                
+                return instance;
+            }
+        }
 
         /// <summary>
-        /// Constructs the manager and restricts to a single instance
+        /// Constructs the manager and restricts to a single instance.
+        /// This cannot be called externally.
         /// </summary>
-        public Postmaster()
+        private Postmaster()
         {
-            if (Instance != null)
-            {
-                throw new System.Exception("You cannot have multiple Postmaster instances");
-            }
-            else
-            {
-                Instance = this;
-            }
+            lookup = new Dictionary<System.Type, SubscriptionBundle>();
+            toClean = new HashSet<MessageSubscription>();
+            config = PostmasterConfig.Default();
         }
 
         /// <summary>
@@ -160,6 +168,8 @@ namespace Loam
         /// Goes through the removal list and destroys all handle subscriptions.
         /// This is intended to be called outside of any callbacks to prevent
         /// unintentionally clearing handles we're actively using/referencing.
+        /// 
+        /// This is left up to you the user to decide update tickover time.
         /// </summary>
         public void Upkeep()
         {
@@ -230,7 +240,7 @@ namespace Loam
         /// Handles the Postmaster cleanup. Will be skipped if 
         /// it's not configured to shut down.
         /// </summary>
-        public void Dispose()
+        public void Cleanup()
         {
             foreach(KeyValuePair<Type, SubscriptionBundle> item in lookup)
             {
@@ -244,8 +254,6 @@ namespace Loam
 
             lookup.Clear();
             toClean.Clear();
-
-            Instance = null;
         }
     }
 }
