@@ -25,7 +25,7 @@ namespace Loam
             // clear. Check out the IL perf at https://stackoverflow.com/questions/1509983/object-initializer-performance.
 
             PostmasterConfig config = new PostmasterConfig();
-            config.ShowLogging = false;
+            config.ShowLogging = true;
             config.ShowWarnings = true;
             config.ShowErrors = true;
 

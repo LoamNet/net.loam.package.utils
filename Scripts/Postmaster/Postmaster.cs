@@ -180,7 +180,7 @@ namespace Loam
 
             if (config.ShowLogging)
             {
-                Debug.Log($"Removing {toClean.Count} subscriptions");
+                Debug.Log($"Removing {toClean.Count} subscription(s)");
             }
 
             foreach(MessageSubscription sub in toClean)
@@ -212,6 +212,17 @@ namespace Loam
         /// <param name="handle">The handle to remove from the list</param>
         private void RemoveSubscription(MessageSubscription handle)
         {
+            // This can happen in situations where the handle is invalidated.
+            if(handle == null)
+            {
+                if (config.ShowLogging)
+                {
+                    Debug.Log("handle provided to RemoveSubscription was null, skipping.");
+                }
+                
+                return;
+            }
+
             if (lookup.TryGetValue(handle.MessageType, out SubscriptionBundle targets))
             {
                 bool wasRemoved = targets.Subscriptions.Remove(handle);
