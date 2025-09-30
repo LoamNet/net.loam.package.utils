@@ -23,7 +23,8 @@ A series of small Unity utilities, extensions, and more to assist with developme
 ### Extensions
 - **GameObject** - Extra hierarchy management
 - **CharacterController** - Warping (setting the transform) that correctly accounts for transform sync.
-
+- **CanvasGroup** - Common visibility extension ('SetCanvasActive(bool)' to adjust alpha, raycast, and interactability)
+- 
 ### Static Functions
 - **EditorClearConsole(...)** - Function that will clear the developer console if in-editor.
 
