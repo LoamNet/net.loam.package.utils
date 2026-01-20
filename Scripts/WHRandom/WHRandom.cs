@@ -47,7 +47,16 @@ namespace Loam
         /// <param name="seed">The number used to generate the pseudo-random series</param>
         public WHRandom(System.Int32 seed)
         {
-            // We want the provided seed wrapped to ultamately from 1 and 29,997 inclusive,
+            SetSeed(seed);
+        }
+
+        /// <summary>
+        /// Sets the internal state of WHRandom to begin with the specified seed.
+        /// </summary>
+        /// <param name="seed">The number used to generate the pseudo-random series.</param>
+        public void SetSeed(System.Int32 seed)
+        {
+            // We want the provided seed in the range of 1 to 29,997 inclusive,
             // that way all three internal seeds are from 1 to 30,000 (inclusive).
             seed = System.Math.Abs(seed); // Ensure we're starting with a positive.
             Seed = seed % (29997);        // Make sure we have a value from 0 to 29,996 inclusive
