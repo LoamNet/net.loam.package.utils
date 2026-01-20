@@ -47,14 +47,14 @@ namespace Loam
         /// <param name="seed">The number used to generate the pseudo-random series</param>
         public WHRandom(System.Int32 seed)
         {
-            SetSeed(seed);
+            InitState(seed);
         }
 
         /// <summary>
         /// Sets the internal state of WHRandom to begin with the specified seed.
         /// </summary>
         /// <param name="seed">The number used to generate the pseudo-random series.</param>
-        public void SetSeed(System.Int32 seed)
+        public void InitState(System.Int32 seed)
         {
             // We want the provided seed in the range of 1 to 29,997 inclusive,
             // that way all three internal seeds are from 1 to 30,000 (inclusive).
@@ -75,6 +75,15 @@ namespace Loam
             seed3 = Seed + 2;
         }
 
+        /// <summary>
+        /// Provide a 50/50 coinflip
+        /// </summary>
+        /// <returns>A random true or false value</returns>
+        public bool FlipCoin()
+        {
+            return Next() >= 0.5;
+        }
+        
         /// <summary>
         /// Generates the next random number in the series.
         /// </summary>
