@@ -24,7 +24,8 @@ namespace Loam
         /// taking the provided seed, applying mod of 29,997, then adding 1.
         /// </summary>
         public System.Int32 Seed { get; private set; }
-
+        public const System.Int32 MAX_SEED = 29996;
+        
         // Internal variables
         private System.Int32 seed1;
         private System.Int32 seed2;
@@ -59,7 +60,7 @@ namespace Loam
             // We want the provided seed in the range of 1 to 29,997 inclusive,
             // that way all three internal seeds are from 1 to 30,000 (inclusive).
             seed = System.Math.Abs(seed); // Ensure we're starting with a positive.
-            Seed = seed % (29997);        // Make sure we have a value from 0 to 29,996 inclusive
+            Seed = seed % (MAX_SEED + 1); // Make sure we have a value from 0 to 29,996 inclusive
             Seed += 1;                    // Make sure we have a value from 1 to 29,997 inclusive. 
 
             ResetSequence();
